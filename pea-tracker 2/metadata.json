@@ -1,0 +1,5 @@
+{
+  "name": "PEA Tracker",
+  "description": "A clean, modern fintech-style PWA for tracking your stock market portfolio (PEA) with real-time calculations and performance visualization.",
+  "requestFramePermissions": []
+}
