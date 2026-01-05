@@ -20,7 +20,10 @@ import {
   TrendingDown,
   Activity,
   DollarSign,
-  BarChart3
+  BarChart3,
+  Banknote,
+  Pencil,
+  Check
 } from 'lucide-react'
 import {
   AreaChart,
@@ -318,6 +321,14 @@ function App() {
   const [viewMode, setViewMode] = useState('grid')
   const [isRefreshing, setIsRefreshing] = useState(false)
 
+  // Cash balance state
+  const [cashBalance, setCashBalance] = useState(() => {
+    const saved = localStorage.getItem('pea-cash')
+    return saved ? parseFloat(saved) : 0
+  })
+  const [isEditingCash, setIsEditingCash] = useState(false)
+  const [editCashValue, setEditCashValue] = useState('')
+
   // Form state
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
@@ -337,6 +348,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem('pea-history', JSON.stringify(portfolioHistory))
   }, [portfolioHistory])
+
+  useEffect(() => {
+    localStorage.setItem('pea-cash', cashBalance.toString())
+  }, [cashBalance])
 
   // Record daily portfolio value
   useEffect(() => {
@@ -491,6 +506,19 @@ function App() {
     if (window.confirm('Supprimer cette ligne ?')) {
       setPositions(positions.filter(pos => pos.id !== id))
     }
+  }
+
+  const handleEditCash = () => {
+    setEditCashValue(cashBalance.toString())
+    setIsEditingCash(true)
+  }
+
+  const handleSaveCash = () => {
+    const value = parseFloat(editCashValue)
+    if (!isNaN(value) && value >= 0) {
+      setCashBalance(value)
+    }
+    setIsEditingCash(false)
   }
 
   const isPositive = stats.totalPL >= 0
@@ -756,6 +784,57 @@ function App() {
                   <p className={`font-bold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                     {isPositive ? 'Optimiste' : 'Sous tension'}
                   </p>
+                </div>
+              </div>
+
+              {/* Cash Balance Section */}
+              <div className="mt-6 pt-6 border-t border-slate-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-emerald-50 rounded-xl">
+                      <Banknote className="text-emerald-600" size={18} />
+                    </div>
+                    <div>
+                      <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-0.5">Espèces Disponibles</p>
+                      {isEditingCash ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editCashValue}
+                            onChange={(e) => setEditCashValue(e.target.value)}
+                            className="w-28 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveCash()
+                              if (e.key === 'Escape') setIsEditingCash(false)
+                            }}
+                          />
+                          <button
+                            onClick={handleSaveCash}
+                            className="p-1 bg-emerald-100 rounded-lg text-emerald-600 hover:bg-emerald-200 transition-colors"
+                          >
+                            <Check size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-slate-700 font-bold">{formatCurrency(cashBalance)}</p>
+                      )}
+                    </div>
+                  </div>
+                  {!isEditingCash && (
+                    <button
+                      onClick={handleEditCash}
+                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
+                      title="Modifier le solde"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
+                </div>
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Valeur totale du compte</span>
+                  <span className="font-bold text-slate-900">{formatCurrency(stats.totalValue + cashBalance)}</span>
                 </div>
               </div>
             </div>
